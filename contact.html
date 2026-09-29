@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Code by Me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header" class="site-header"></header>
+
+<main>
+  <section class="section--tight">
+    <div class="container grid grid-2" style="gap:56px;align-items:start;">
+      <div>
+        <div class="eyebrow">Get in touch</div>
+        <h1>Contact Code by Me</h1>
+        <p class="lede">Tell us about your project, or reach out directly.</p>
+
+        <ul class="info-list" style="margin-top:24px;">
+          <li><strong>WhatsApp / Call:</strong> <a href="https://wa.me/2349053047349" target="_blank" rel="noopener">09053047349</a></li>
+          <li><strong>Telegram:</strong> <a href="https://t.me/codebymewd" target="_blank" rel="noopener">@codebymewd</a></li>
+          <li><strong>Email:</strong> <a href="mailto:codebymewd@gmail.com">codebymewd@gmail.com</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <form id="contact-form">
+          <div class="form-field">
+            <label for="contact-name">Full name</label>
+            <input id="contact-name" type="text" required>
+            <div class="field-error">Please enter your name.</div>
+          </div>
+          <div class="form-field">
+            <label for="contact-email">Email</label>
+            <input id="contact-email" type="email" required>
+            <div class="field-error">Please enter a valid email address.</div>
+          </div>
+          <div class="form-field">
+            <label for="contact-phone">Phone (optional)</label>
+            <input id="contact-phone" type="tel">
+          </div>
+          <div class="form-field">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" rows="5" required></textarea>
+            <div class="field-error">Please enter a message.</div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="contact-submit">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer" class="site-footer"></footer>
+<script type="module" src="js/contact.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- owner check: a Firebase Auth user is the CBM owner only if a
+    // document exists at admins/{their uid}. Create this document manually
+    // in the Firebase console (Firestore) after creating the owner's
+    // Firebase Authentication account — see admin/README section in the
+    // project README for the exact steps. This is the single source of
+    // truth for "who can manage the dashboard," enforced here, not just
+    // hidden behind the dashboard's UI.
+    function isOwner() {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Owners can read their own admin record; nobody can write it from
+    // client code (add/remove owners directly in the Firebase console).
+    match /admins/{uid} {
+      allow read: if isOwner();
+      allow write: if false;
+    }
+
+    // ---- admins/{uid}/fcmTokens: FCM push tokens for the notification
+    // system. An owner may only create/read/delete their OWN token docs
+    // (js/notifications.js writes here when the browser grants push
+    // permission). Cloud Functions read these with the Admin SDK, which
+    // bypasses these rules entirely.
+    match /admins/{uid}/fcmTokens/{tokenId} {
+      allow read, write: if isOwner() && request.auth.uid == uid;
+    }
+
+    // ---- notifications: powers the Admin Dashboard's notification bell.
+    // Only Cloud Functions (Admin SDK — bypasses these rules) create these;
+    // the owner can read the feed and mark items read, nothing else.
+    match /notifications/{notificationId} {
+      allow read: if isOwner();
+      allow update: if isOwner() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["read", "readAt"]);
+      allow create, delete: if false;
+    }
+
+    // ---- templates: public read of published templates; owner manages all ----
+    match /templates/{templateId} {
+      allow read: if resource.data.active == true || isOwner();
+      allow create, delete: if isOwner();
+
+      // Part 9/27: a customer reserving a template as part of placing an
+      // order (see checkout.js's createOrder() transaction) is the ONE
+      // non-owner write allowed here. It only permits the exact
+      // "Available -> Reserved" transition, and diff().affectedKeys()
+      // guarantees every other field on the template (price, files,
+      // packages, everything) is completely untouched by this write —
+      // safer than listing every field explicitly given how many optional
+      // fields a template can have. Templates saved before this feature
+      // existed have no availabilityStatus field at all — treated as
+      // Available here too, matching the client's availabilityOf() helper.
+      allow update: if isOwner() || (
+        (resource.data.availabilityStatus == "Available" || !("availabilityStatus" in resource.data)) &&
+        request.resource.data.availabilityStatus == "Reserved" &&
+        request.resource.data.reservationOrderId is string &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(["availabilityStatus", "reservationOrderId", "reservedAt"])
+      );
+    }
+
+    // ---- projects: public read; owner manages ----
+    match /projects/{projectId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner();
+    }
+
+    // ---- settings: public read (business info, payment details); owner writes ----
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isOwner();
+    }
+
+    // ---- orders: customers create their own order and can GET (never LIST)
+    // a single order by its document ID (the generated Order ID) — see
+    // check-order.js for the client-side email match on top of this. The
+    // owner can read/list/update everything (payment verification workflow).
+    match /orders/{orderId} {
+      allow get: if true;
+      allow list: if isOwner();
+
+      // Part 4: the order is created right after the customer submits their
+      // info, BEFORE payment — so it starts in "Awaiting Payment" with no
+      // screenshot yet, instead of arriving already "Awaiting Verification".
+      allow create: if request.resource.data.orderId == orderId
+                    && request.resource.data.orderStatus == "Awaiting Payment"
+                    && request.resource.data.paymentStatus == "Not Submitted"
+                    && request.resource.data.email is string
+                    && request.resource.data.amount is number;
+
+      // Part 12: the ONE update a customer can make themselves — submitting
+      // their payment screenshot. This only allows that exact transition
+      // (Awaiting Payment -> Awaiting Verification, with a screenshot
+      // attached) and locks every other field to its existing value, so a
+      // customer can never confirm their own payment, change the amount, or
+      // move an order into any other status themselves.
+      allow update: if isOwner() || (
+        resource.data.orderStatus == "Awaiting Payment" &&
+        request.resource.data.orderStatus == "Awaiting Verification" &&
+        request.resource.data.paymentStatus == "Payment Submitted" &&
+        request.resource.data.paymentScreenshot is string &&
+        request.resource.data.orderId == resource.data.orderId &&
+        request.resource.data.email == resource.data.email &&
+        request.resource.data.templateId == resource.data.templateId &&
+        request.resource.data.amount == resource.data.amount
+      );
+
+      allow delete: if isOwner();
+    }
+
+    // ---- contactMessages: customers create, only the owner reads them back ----
+    match /contactMessages/{messageId} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.message is string;
+      allow read, update, delete: if isOwner();
+    }
+
+    // ---- promoMedia: standalone marketing assets, owner-only end to end ----
+    match /promoMedia/{mediaId} {
+      allow read, create, update, delete: if isOwner();
+    }
+  }
+}

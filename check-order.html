@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check Order — Code by Me</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="site-header" class="site-header"></header>
+
+<main>
+  <section class="section--tight">
+    <div class="container" style="max-width:620px;">
+      <div class="eyebrow">Order status</div>
+      <h1>Check Your Order</h1>
+      <p class="lede">Use your Order ID and the email address you used when placing your order to continue an incomplete order or check the status of a completed order.</p>
+      <p class="form-hint">Lost your payment page? Don't worry. Your order is saved. Enter your Order ID and email above to continue an incomplete payment, upload your payment proof, or check your order status.</p>
+
+      <form id="check-order-form" style="margin-top:24px;">
+        <div class="form-field">
+          <label for="lookup-email">Gmail / email</label>
+          <input id="lookup-email" type="email" placeholder="customer@gmail.com" required>
+          <div class="field-error">Please enter a valid email address.</div>
+        </div>
+        <div class="form-field">
+          <label for="lookup-order-id">Order ID</label>
+          <input id="lookup-order-id" type="text" placeholder="CBM-8F42K" required>
+          <div class="field-error">Please enter your Order ID.</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block" id="lookup-btn">Check Order</button>
+      </form>
+
+      <div id="order-result" style="margin-top:32px;"></div>
+    </div>
+  </section>
+</main>
+
+<footer id="site-footer" class="site-footer"></footer>
+<script type="module" src="js/check-order.js"></script>
+</body>
+</html>
