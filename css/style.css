@@ -89,8 +89,13 @@ h3{font-size:20px;}
 /* Header */ 
 .site-header{ 
   position:sticky;top:0;z-index:50; 
-  background:rgba(255,255,255,0.92);backdrop-filter:blur(10px); 
+  background:rgba(255,255,255,0.92); 
   border-bottom:1px solid var(--cbm-line); 
+} 
+/* Blur lives on a pseudo-element: backdrop-filter on .site-header itself traps the fixed mobile nav inside the 72px header. */ 
+.site-header::before{ 
+  content:'';position:absolute;inset:0;z-index:-1;pointer-events:none; 
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px); 
 } 
 .site-header .container{ 
   display:flex;align-items:center;justify-content:space-between; 
